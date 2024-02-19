@@ -41,9 +41,7 @@
     <!-- Sed replace given_def.xml here. -->
 
     <!-- parsing start -->
-    <reg name="cycle" bitsize="32" type="int" group="pipe" regnum="0x51"/>
-    <reg name="f2d" bitsize="32" type="Fetch2Decode" group="pipe"/>
-    <!-- <reg name="d2r" bitsize="32" type="Decode2Rest" group="pipe"/> -->
+    <!-- Sed replace custom_regs.xml here. -->
     <!-- parsing end -->
   </feature>
 </target>

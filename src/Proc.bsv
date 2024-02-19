@@ -320,16 +320,9 @@ module mkProc(Proc);
     let custom_reg_addr <- pop(f_custom_reg_reqs);
     Bit#(MAX_CUSTOM_REG_SIZE) data = ?;
     
-    if (custom_reg_addr == 0)
-      data = zeroExtend(csrf.readCycle);
-    else if (custom_reg_addr == 1)
-      data = zeroExtend(pack(f2d.first));
-    // else if (custom_reg_addr == 2)
-    //   data = zeroExtend(pack(d2r.first));
-    else begin
-      $fwrite(stderr, "rl_debug_read_custom_reg: Invalid custom_reg %h found\n", custom_reg_addr);
-      $finish(1);
-    end
+    // Sed Custom Reg Replacment START // DO NOT MODIFY
+
+    // Sed Custom Reg Replacment END // DO NOT MODIFY
 
     let rsp = DM_CPU_Rsp{ok: True, data: data};
     f_custom_reg_resp.enq(rsp);

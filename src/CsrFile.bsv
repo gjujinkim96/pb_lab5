@@ -67,9 +67,9 @@ module mkCsrFile(CsrFile);
     FIFOF#(Bool) cycleHaltRspFifo <- mkBypassFIFOF;
     FIFOF#(Bool) fetchHaltRspFifo <- mkBypassFIFOF;
     Reg#(Bool) debug_stop <- mkReg(True);
+    `endif
 
-
-
+    `ifdef INCLUDE_GDB_CONTROL
     rule count (startReg && !debug_stop);
         cycles <= cycles + 1;
         $display("\nCycle %d ----------------------------------------------------", cycles);
@@ -78,7 +78,6 @@ module mkCsrFile(CsrFile);
     rule gdbStopEveryCycle(startReg && !debug_stop && dcsr[2] == 1'b1);
         cycleHaltRspFifo.enq(True);
     endrule
-
     `else
     rule count (startReg);
         cycles <= cycles + 1;
@@ -93,17 +92,13 @@ module mkCsrFile(CsrFile);
     endmethod
 
     `ifdef INCLUDE_GDB_CONTROL
-
     method Bool started;
         return startReg && !debug_stop;
     endmethod
-
     `else
-
     method Bool started;
         return startReg;
     endmethod
-
     `endif
 
     method Data rd(CsrIndx idx);
