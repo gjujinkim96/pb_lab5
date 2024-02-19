@@ -28,7 +28,8 @@ function hazard_test {
 function program_test {
 	cp $PROGDIR/$1.vmh $SRCPATH/memory.vmh
 	mkdir -p $LOGDIR/program
-	$BINDIR/sim > $LOGDIR/program/$1
+	# $BINDIR/sim > $LOGDIR/program/$1
+	$BINDIR/sim 
 	rm memory.vmh
 }
 
@@ -63,6 +64,18 @@ function decode_compile {
   mkdir -p $BINDIR
  	bsc -u -sim -aggressive-conditions -no-warn-action-shadowing -p +:$LIB/common-lib -simdir $BDIRDIR -info-dir $BDIRDIR -bdir $BDIRDIR $LIB/common-lib/TestBenchDecode.bsv
 	bsc -u -sim -e mkTestBenchDecode -bdir $BDIRDIR -info-dir $BDIRDIR -simdir $BDIRDIR -o $BINDIR/sim $BDIRDIR/*.ba
+}
+
+function debug_compile {
+  mkdir -p $BUILDDIR
+  mkdir -p $BDIRDIR
+  mkdir -p $BINDIR
+ 	bsc -u -sim -aggressive-conditions -no-warn-action-shadowing -D INCLUDE_GDB_CONTROL \
+		 -p +:$LIB/common-lib:$LIB/common-lib/gdb-support:$LIB/common-lib/gdb-support/ISA_Decls \
+		 -simdir $BDIRDIR -info-dir $BDIRDIR -bdir $BDIRDIR $LIB/common-lib/TestBench.bsv
+		
+	bsc -u -sim -e mkTestBench -bdir $BDIRDIR -info-dir $BDIRDIR -simdir $BDIRDIR -o $BINDIR/sim $BDIRDIR/*.ba \
+		../lib/common-lib/gdb-support/C_Imported_Functions.c
 }
 
 function test_all {
@@ -214,6 +227,7 @@ function test_all {
 case "$1" in
 	-c) clean;
     if [ "$2" == "-d" ]; then decode_compile;
+	elif [ "$2" == "-g" ]; then debug_compile;
     else compile;
     fi;;
 	-clean) clean;;

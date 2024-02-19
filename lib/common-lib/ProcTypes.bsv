@@ -32,13 +32,15 @@ typedef struct {
 	Bit#(32) data2;
 } CpuToHostData deriving(Bits, Eq, FShow);
 
-interface Proc;
-    method ActionValue#(CpuToHostData) cpuToHost;
-  	//method ActionValue#(Tuple3#(CsrIndx, Data, Data)) cpuToHost;
-    method Action hostToCpu(Addr startpc);
-    interface MemInitIfc iMemInit;
-    interface MemInitIfc dMemInit;
-endinterface
+`ifdef INCLUDE_GDB_CONTROL
+
+typedef enum {
+  PROC_WAIT_RESET,
+  PROC_WAIT_GDB,
+  PROC_RUNNING
+} PROC_State deriving (Eq, Bits, FShow);
+
+`endif
 
 // general purpose reg index
 typedef Bit#(5) RIndx;
@@ -66,6 +68,11 @@ CsrIndx csrInstret = 12'hc02;
 CsrIndx csrCycle   = 12'hc00;
 CsrIndx csrMhartid = 12'hf10;
 CsrIndx csrMtohost = 12'h780;
+
+`ifdef INCLUDE_GDB_CONTROL
+CsrIndx csrDcsr    = 12'h7b0;
+CsrIndx csrDpc     = 12'h7b1;
+`endif
 
 // LR, SC, FENCE not implemented
 // LB(U), LH(U), SB, SH not implemented
@@ -189,6 +196,7 @@ Bit#(3) fnFENCE  = 3'b000;
 // System
 Bit#(3) fnCSRRW  = 3'b001;
 Bit#(3) fnCSRRS  = 3'b010;
+
 //Bit#(3) fnCSRRC  = 3'b011;
 //Bit#(3) fnCSRRWI = 3'b101;
 //Bit#(3) fnCSRRSI = 3'b110;

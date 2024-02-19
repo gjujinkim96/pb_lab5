@@ -27,6 +27,10 @@ interface RFile;
     method Action wr( RIndx rindx, Data data );
     method Data rd1( RIndx rindx );
     method Data rd2( RIndx rindx );
+    
+    `ifdef INCLUDE_GDB_CONTROL
+    method Data gpr_read ( RIndx rindx );
+    `endif
 endinterface
 
 (* synthesize *)
@@ -45,6 +49,10 @@ module mkRFile( RFile );
 
     method Data rd1( RIndx rindx ) = read(rindx);
     method Data rd2( RIndx rindx ) = read(rindx);
+
+    `ifdef INCLUDE_GDB_CONTROL
+    method Data gpr_read( RIndx rindx ) = read(rindx);
+    `endif
 endmodule
 
 (* synthesize *)
@@ -63,4 +71,8 @@ module mkBypassRFile( RFile );
 
     method Data rd1( RIndx rindx ) = read(rindx);
     method Data rd2( RIndx rindx ) = read(rindx);
+
+    `ifdef INCLUDE_GDB_CONTROL
+    method Data gpr_read( RIndx rindx ) = read(rindx);
+    `endif
 endmodule

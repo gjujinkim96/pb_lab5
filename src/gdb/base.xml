@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!DOCTYPE target SYSTEM "gdb-target.dtd">
+<target>
+  <architecture>riscv:rv32</architecture>
+
+  <feature name="org.gnu.gdb.riscv.cpu">
+    <reg name="zero" bitsize="32" type="int" regnum="0" group="general"/>
+    <reg name="ra" bitsize="32" type="code_ptr" group="general"/>
+    <reg name="sp" bitsize="32" type="data_ptr" group="general"/>
+    <reg name="gp" bitsize="32" type="data_ptr" group="general"/>
+    <reg name="tp" bitsize="32" type="data_ptr" group="general"/>
+    <reg name="t0" bitsize="32" type="int" group="general"/>
+    <reg name="t1" bitsize="32" type="int" group="general"/>
+    <reg name="t2" bitsize="32" type="int" group="general"/>
+    <reg name="fp" bitsize="32" type="data_ptr" group="general"/>
+    <reg name="s1" bitsize="32" type="int" group="general"/>
+    <reg name="a0" bitsize="32" type="int" group="general"/>
+    <reg name="a1" bitsize="32" type="int" group="general"/>
+    <reg name="a2" bitsize="32" type="int" group="general"/>
+    <reg name="a3" bitsize="32" type="int" group="general"/>
+    <reg name="a4" bitsize="32" type="int" group="general"/>
+    <reg name="a5" bitsize="32" type="int" group="general"/>
+    <reg name="a6" bitsize="32" type="int" group="general"/>
+    <reg name="a7" bitsize="32" type="int" group="general"/>
+    <reg name="s2" bitsize="32" type="int" group="general"/>
+    <reg name="s3" bitsize="32" type="int" group="general"/>
+    <reg name="s4" bitsize="32" type="int" group="general"/>
+    <reg name="s5" bitsize="32" type="int" group="general"/>
+    <reg name="s6" bitsize="32" type="int" group="general"/>
+    <reg name="s7" bitsize="32" type="int" group="general"/>
+    <reg name="s8" bitsize="32" type="int" group="general"/>
+    <reg name="s9" bitsize="32" type="int" group="general"/>
+    <reg name="s10" bitsize="32" type="int" group="general"/>
+    <reg name="s11" bitsize="32" type="int" group="general"/>
+    <reg name="t3" bitsize="32" type="int" group="general"/>
+    <reg name="t4" bitsize="32" type="int" group="general"/>
+    <reg name="t5" bitsize="32" type="int" group="general"/>
+    <reg name="t6" bitsize="32" type="int" group="general"/>
+    <reg name= "pc" bitsize="32" type="code_ptr" group="general"/>
+
+    <!-- Sed replace given_def.xml here. -->
+
+    <!-- parsing start -->
+    <reg name="cycle" bitsize="32" type="int" group="pipe" regnum="0x51"/>
+    <reg name="f2d" bitsize="32" type="Fetch2Decode" group="pipe"/>
+    <!-- <reg name="d2r" bitsize="32" type="Decode2Rest" group="pipe"/> -->
+    <!-- parsing end -->
+  </feature>
+</target>

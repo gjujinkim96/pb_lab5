@@ -4,6 +4,16 @@ import Ehr::*;
 import ConfigReg::*;
 import Fifo::*;
 
+`ifdef INCLUDE_GDB_CONTROL
+
+import FIFOF:: *;
+import SpecialFIFOs :: * ;
+import Vector::*;
+import PipelineStructs::*;
+import ClientServer :: *;
+
+`endif 
+
 typedef enum {Ctr, Mem} InstCntType deriving(Bits, Eq);
 
 /*Exercise 4*/
@@ -19,6 +29,18 @@ interface CsrFile;
     method Action incInstTypeCnt(InstCntType inst);
     method Action incBPMissCnt();
     method Action incMissInstTypeCnt(InstMissCntType inst);
+
+    `ifdef INCLUDE_GDB_CONTROL
+    method Action resume;
+    method Bool halted;
+    method Data rd2(CsrIndx idx);
+    method Data readCycle;
+    method Action setPc(Addr pc);
+    method Action handleHaltRsp;
+    method Action processFetchResult(Fetch2Decode fetchResult);
+
+    interface Server#(Bool, Bool) csrf_server;
+    `endif
 endinterface
 
 (* synthesize *)
@@ -37,10 +59,34 @@ module mkCsrFile(CsrFile);
     Fifo#(2, CpuToHostData) toHostFifo <- mkCFFifo; // csrMtohost -- write only
     Fifo#(2, Tuple3#(CsrIndx, Data, Data)) csrFifo <- mkCFFifo;
 
+    `ifdef INCLUDE_GDB_CONTROL
+    Reg#(Data) dcsr <- mkReg(32'hf0000117);
+    Reg#(Addr) dpc <- mkReg(32'h0);
+    Vector#(16, Reg#(Data)) extras <- replicateM(mkReg(0));
+
+    Fifo#(2, CpuToHostData) toProcFifo <- mkCFFifo; // csrMtohost -- write only
+    FIFOF#(Bool) haltRspFifo <- mkBypassFIFOF;
+    FIFOF#(Bool) cycleHaltRspFifo <- mkBypassFIFOF;
+    FIFOF#(Bool) fetchHaltRspFifo <- mkBypassFIFOF;
+    Reg#(Bool) debug_stop <- mkReg(True);
+
+
+
+    rule count (startReg && !debug_stop);
+        cycles <= cycles + 1;
+        $display("\nCycle %d ----------------------------------------------------", cycles);
+    endrule
+
+    rule gdbStopEveryCycle(startReg && !debug_stop && dcsr[2] == 1'b1);
+        cycleHaltRspFifo.enq(True);
+    endrule
+
+    `else
     rule count (startReg);
         cycles <= cycles + 1;
         $display("\nCycle %d ----------------------------------------------------", cycles);
     endrule
+    `endif
 
     method Action start(Data id) if(!startReg);
         startReg <= True;
@@ -89,10 +135,18 @@ module mkCsrFile(CsrFile);
                         data: lo,
                         data2: numInsts
                     });
+
+                    `ifdef INCLUDE_GDB_CONTROL
+                    haltRspFifo.enq(True);
+                    `endif
                 end
+                `ifdef INCLUDE_GDB_CONTROL
+                csrDcsr: dcsr <= val;
+                `endif
             endcase
         end
-        numInsts <= numInsts + 1;
+        else
+            numInsts <= numInsts + 1;
     endmethod
 
 
@@ -119,4 +173,49 @@ module mkCsrFile(CsrFile);
         return toHostFifo.first;
     endmethod
 
+    `ifdef INCLUDE_GDB_CONTROL
+
+    method Action resume;
+        debug_stop <= False;
+    endmethod
+
+    method Bool halted;
+        return debug_stop;
+    endmethod
+
+    method Data rd2(CsrIndx idx);
+        return (case(idx)
+                    csrDcsr: dcsr;
+                    csrDpc: dpc;
+                    default: ?;
+                endcase);
+    endmethod
+
+    method Data readCycle;
+        return cycles;
+    endmethod
+
+    method Action setPc(Addr pc);
+        dpc <= pc;
+    endmethod
+
+    method Action handleHaltRsp if (haltRspFifo.notEmpty || cycleHaltRspFifo.notEmpty || fetchHaltRspFifo.notEmpty);
+        if (haltRspFifo.notEmpty)
+            haltRspFifo.deq;
+
+        if (cycleHaltRspFifo.notEmpty)
+            cycleHaltRspFifo.deq;
+
+        if (fetchHaltRspFifo.notEmpty)
+            fetchHaltRspFifo.deq;
+
+        debug_stop <= True;
+    endmethod
+
+    method Action processFetchResult(Fetch2Decode fetchResult);
+        dpc <= fetchResult.pc;
+        if (fetchResult.inst ==  32'h00100073)
+            fetchHaltRspFifo.enq(True);
+    endmethod
+    `endif
 endmodule
