@@ -9,7 +9,6 @@ import Fifo::*;
 import FIFOF:: *;
 import SpecialFIFOs :: * ;
 import Vector::*;
-import PipelineStructs::*;
 import ClientServer :: *;
 
 `endif 
@@ -32,12 +31,11 @@ interface CsrFile;
 
     `ifdef INCLUDE_GDB_CONTROL
     method Action resume;
-    method Bool halted;
     method Data rd2(CsrIndx idx);
     method Data readCycle;
     method Action setPc(Addr pc);
     method Action handleHaltRsp;
-    method Action processFetchResult(Fetch2Decode fetchResult);
+    method Action processFetchResult(Addr pc, Instruction inst);
 
     interface Server#(Bool, Bool) csrf_server;
     `endif
@@ -94,9 +92,19 @@ module mkCsrFile(CsrFile);
 		coreId <= id;
     endmethod
 
+    `ifdef INCLUDE_GDB_CONTROL
+
+    method Bool started;
+        return startReg && !debug_stop;
+    endmethod
+
+    `else
+
     method Bool started;
         return startReg;
     endmethod
+
+    `endif
 
     method Data rd(CsrIndx idx);
         return (case(idx)
@@ -179,10 +187,6 @@ module mkCsrFile(CsrFile);
         debug_stop <= False;
     endmethod
 
-    method Bool halted;
-        return debug_stop;
-    endmethod
-
     method Data rd2(CsrIndx idx);
         return (case(idx)
                     csrDcsr: dcsr;
@@ -212,9 +216,9 @@ module mkCsrFile(CsrFile);
         debug_stop <= True;
     endmethod
 
-    method Action processFetchResult(Fetch2Decode fetchResult);
-        dpc <= fetchResult.pc;
-        if (fetchResult.inst ==  32'h00100073)
+    method Action processFetchResult(Addr pc, Instruction inst);
+        dpc <= pc;
+        if (inst ==  32'h00100073)
             fetchHaltRspFifo.enq(True);
     endmethod
     `endif

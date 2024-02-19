@@ -14,7 +14,6 @@ import Proc          :: *;
 import Types::*;
 
 import Memory_Common :: *;
-import ProcInterface :: *;
 import C_Imports        :: *;
 
 

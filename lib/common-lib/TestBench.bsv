@@ -11,8 +11,6 @@ import GetPut_Aux   :: *;
 import C_Imports        :: *;
 import External_Control :: *;
 import SoC              :: *;
-`else
-import ProcInterface::*;
 `endif
 
 typedef enum{Start, Run, Halt} TestState deriving (Bits, Eq);

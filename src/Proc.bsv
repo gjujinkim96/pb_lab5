@@ -11,8 +11,6 @@ import Vector::*;
 import Fifo::*;
 import Ehr::*;
 import GetPut::*;
-import PipelineStructs::*;
-import ProcInterface::*;
 
 `ifdef INCLUDE_GDB_CONTROL
 
@@ -30,6 +28,15 @@ import ISA_Decls        :: *;
 
 `endif
 
+
+typedef struct {
+  Instruction inst;
+  Addr pc;
+  Addr ppc;
+  Bool epoch;
+} Fetch2Decode deriving(Bits, Eq);
+
+
 (*synthesize*)
 module mkProc(Proc);
   Reg#(Addr)    pc  <- mkRegU;
@@ -38,10 +45,8 @@ module mkProc(Proc);
   DMemory     dMem  <- mkDMemory;
   CsrFile     csrf <- mkCsrFile;
 
-  `ifndef INCLUDE_GDB_CONTROL
   Reg#(ProcStatus)   stat		<- mkRegU;
   Fifo#(1,ProcStatus) statRedirect <- mkBypassFifo;
-  `endif
 
   // Control hazard handling Elements
   Reg#(Bool) fEpoch <- mkRegU;
@@ -51,20 +56,14 @@ module mkProc(Proc);
 
   Fifo#(2, Fetch2Decode)  f2d <- mkPipelineFifo;
 
-  `ifndef INCLUDE_GDB_CONTROL
   Bool memReady = iMem.init.done() && dMem.init.done();
   rule test (!memReady);
     let e = tagged InitDone;
     iMem.init.request.put(e);
     dMem.init.request.put(e);
   endrule
-  `endif
 
-  `ifdef INCLUDE_GDB_CONTROL
-  rule doDecode(csrf.started && !csrf.halted);
-  `else
   rule doFetch(csrf.started && stat == AOK);
-  `endif
 	/* Exercise_2 */
 	/*TODO: 
 	Remove 1-cycle inefficiency when execRedirect is used. */
@@ -83,16 +82,15 @@ module mkProc(Proc);
     let fetchResult = Fetch2Decode{inst:inst, pc:pc, ppc:ppc, epoch:fEpoch};
     f2d.enq(fetchResult); 
     $display("Fetch : from Pc %d , \n", pc);
+
     `ifdef INCLUDE_GDB_CONTROL
-    csrf.processFetchResult(fetchResult);
+
+    csrf.processFetchResult(fetchResult.pc, fetchResult.inst);
+    
     `endif
   endrule
 
-  `ifdef INCLUDE_GDB_CONTROL
-  rule doRest(csrf.started && !csrf.halted);
-  `else
   rule doRest(csrf.started && stat == AOK);
-  `endif
 	/* Exercise_1 */
 	/* TODO: 
 	Divide the doRest rule into doDecode, doRest rules 
@@ -168,15 +166,15 @@ module mkProc(Proc);
   end
   endrule
 
-  `ifndef INCLUDE_GDB_CONTROL
+  // Does not fire
   rule upd_Stat(csrf.started);
 	$display("Stat update");
   	statRedirect.deq;
     stat <= statRedirect.first;
   endrule
-  `endif
 
   `ifdef INCLUDE_GDB_CONTROL
+
   FIFOF#(Bool)  f_host_to_cpu <- mkFIFOF;
 
   FIFOF#(Bool)  f_run_halt_reqs <- mkFIFOF;
@@ -212,6 +210,9 @@ module mkProc(Proc);
       rg_state <= PROC_RUNNING;
 
       csrf.start(0);
+      eEpoch <= False;
+      fEpoch <= False;
+      stat <= AOK;
 
       $fwrite(stderr, "GDB Connected\n");
     end
@@ -383,7 +384,11 @@ module mkProc(Proc);
     return f_test_compl_resp.first;
   endmethod
   // ================================================================
-  `else
+  `endif 
+  
+  interface iMemInit = iMem.init;
+  interface dMemInit = dMem.init;
+
   method ActionValue#(CpuToHostData) cpuToHost;
     let retV <- csrf.cpuToHost;
     return retV;
@@ -396,9 +401,4 @@ module mkProc(Proc);
     pc <= startpc;
     stat <= AOK;
   endmethod
-
-  interface iMemInit = iMem.init;
-  interface dMemInit = dMem.init;
-  `endif
-  
 endmodule
