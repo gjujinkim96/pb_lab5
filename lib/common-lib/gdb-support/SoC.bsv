@@ -16,6 +16,8 @@ import Types::*;
 import Memory_Common :: *;
 import C_Imports        :: *;
 
+import DM_Common::*;
+
 
 interface SoC_IFC;
   method ActionValue#(CpuToHostData) cpuToHost;
@@ -39,6 +41,10 @@ module mkSoC(SoC_IFC);
   mkConnection(debug_module.hart0_custom_reg_mem_client, proc.hart0_custom_reg_mem_server);
   mkConnection(debug_module.hart0_mod_f2d_client, proc.hart0_mod_f2d_server);
 
+  Reg#(Bool) is_tracking <- mkReg(False);
+  Reg#(Bool) is_pooling <- mkReg(False);
+  Reg#(Bool) is_end <- mkReg(False);
+
   rule rl_debug_client_request_recv;
     Bit #(64) req <- c_debug_client_request_recv ('hAA);
     Bit #(8)  status = req [63:56];
@@ -52,10 +58,18 @@ module mkSoC(SoC_IFC);
         cntl_req = Control_Req {op: external_control_req_op_read_control_fabric,
                                    arg1: zeroExtend (addr),
                                    arg2: 0};
-      else if (op == dmi_op_write)
+      else if (op == dmi_op_write) begin
         cntl_req = Control_Req {op: external_control_req_op_write_control_fabric,
           arg1: zeroExtend (addr),
           arg2: zeroExtend (data)};
+
+          DM_Addr dm_addr = truncate(cntl_req.arg1);
+          DM_Word dm_word = truncate(cntl_req.arg2);
+
+          // Bool  is_write = fn_command_access_reg_write(dm_word);
+          Bit#(13) regno = truncate (fn_command_access_reg_regno(dm_word));
+				  Bit #(5) gpr_addr = truncate(regno - fromInteger(dm_command_access_reg_regno_gpr_0));
+      end
       cntl_reqs.enq(cntl_req);
     end
   endrule
@@ -77,6 +91,7 @@ module mkSoC(SoC_IFC);
   rule rl_debug_client_response_send;
     let dmiData <- dm_dmi.read_data;
     let status <- c_debug_client_response_send (dmiData);
+
     if (status == dmi_status_err)
       $finish (1);
   endrule
