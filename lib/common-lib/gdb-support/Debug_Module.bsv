@@ -129,9 +129,11 @@ module mkDebug_Module(Debug_Module_IFC);
 
 	// ================================================================
 	// Debug Module Rules
+	Reg#(Bool) is_tracking <- mkReg(False);
 
 	rule rl_gpr_start(rg_abstractcs_busy && rg_start_reg_access && is_gpr);
 		Bit #(5) gpr_addr = truncate(rg_command_access_reg_regno - fromInteger(dm_command_access_reg_regno_gpr_0));
+
 		let req = DM_CPU_Req{write: rg_command_access_reg_write, address: gpr_addr, data: rg_data0};
 		f_hart0_gpr_reqs.enq(req);
 		rg_start_reg_access <= False;

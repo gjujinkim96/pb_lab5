@@ -35,6 +35,7 @@
 #include <arpa/inet.h>        //  inet (3) funtions
 #include <netinet/in.h>
 #include <fcntl.h>            // To set non-blocking mode
+#include <sys/un.h>
 
 // ================================================================
 // Includes for this project
@@ -63,6 +64,8 @@ static FILE *logfile_fp = NULL;
 
 static char logfile_name [] = "debug_server_log.txt";
 
+static const char unix_socket_file[] = "gdb/unix_socket/dm_stub_";
+
 // ================================================================
 // Connect to debug client as server on tcp_port.
 // Return fail/ok.
@@ -70,13 +73,14 @@ static char logfile_name [] = "debug_server_log.txt";
 uint8_t  c_debug_client_connect (const uint16_t tcp_port)
 {
     int                 listen_sockfd;        // listening socket
-    struct sockaddr_in  servaddr;             // socket address structure
+    struct sockaddr_un  servaddr;             // socket address structure
     struct linger       linger;
   
+  	fprintf (stdout, "Working on unix socket: %s%d  ...\n", unix_socket_file, tcp_port);
     fprintf (stdout, "Awaiting remote debug client connection on tcp port %0d ...\n", tcp_port);
 
     // Create the listening socket
-    if ( (listen_sockfd = socket (AF_INET, SOCK_STREAM, 0)) < 0 ) {
+    if ( (listen_sockfd = socket (AF_UNIX, SOCK_STREAM, 0)) < 0 ) {
 	fprintf (stderr, "ERROR: c_debug_client_connect: socket () failed\n");
 	return DMI_STATUS_ERR;
     }
@@ -88,9 +92,8 @@ uint8_t  c_debug_client_connect (const uint16_t tcp_port)
 
     // Initialize socket address structure
     memset (& servaddr, 0, sizeof (servaddr));
-    servaddr.sin_family      = AF_INET;
-    servaddr.sin_addr.s_addr = htonl (INADDR_ANY);
-    servaddr.sin_port        = htons (tcp_port);
+	servaddr.sun_family = AF_UNIX;
+	sprintf(servaddr.sun_path, "%s%d", unix_socket_file, tcp_port);
 
     // Bind socket addresss to listening socket
     if ( bind (listen_sockfd, (struct sockaddr *) & servaddr, sizeof (servaddr)) < 0 ) {
@@ -135,8 +138,6 @@ uint8_t  c_debug_client_connect (const uint16_t tcp_port)
 	perror ("ERROR: c_debug_client_connect: error in close (listen_sockfd)");
 	return DMI_STATUS_ERR;
     }
-
-    fprintf (stdout, "Connected\n");
 
     logfile_fp = NULL;                         // No debugging
     // logfile_fp = fopen (logfile_name, "w");    // Debugging
