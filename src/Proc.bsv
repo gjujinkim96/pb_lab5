@@ -320,9 +320,9 @@ module mkProc(Proc);
     let custom_reg_addr <- pop(f_custom_reg_reqs);
     Bit#(MAX_CUSTOM_REG_SIZE) data = ?;
     
-    // Sed Custom Reg Replacment START // DO NOT MODIFY
+    // Custom Reg Replacment START // DO NOT MODIFY
 
-    // Sed Custom Reg Replacment END // DO NOT MODIFY
+    // Custom Reg Replacment END // DO NOT MODIFY
 
     let rsp = DM_CPU_Rsp{ok: True, data: data};
     f_custom_reg_resp.enq(rsp);

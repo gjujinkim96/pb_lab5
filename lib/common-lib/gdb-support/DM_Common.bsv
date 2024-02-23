@@ -327,7 +327,7 @@ Integer dm_command_access_reg_regno_gpr_1F  = 'h101F;
 Integer dm_command_access_reg_regno_fpr_0   = 'h1020;
 Integer dm_command_access_reg_regno_fpr_1F  = 'h103F;
 Integer dm_command_access_reg_regno_custom_0 = 'h1041;
-Integer dm_command_access_reg_regno_custom_10 = 'h1051;
+Integer dm_command_access_reg_regno_custom_100 = 'h1141;
 
 function DM_Word fn_mk_command_access_reg (DM_command_access_reg_size  size,
 					   Bool                        postexec,
