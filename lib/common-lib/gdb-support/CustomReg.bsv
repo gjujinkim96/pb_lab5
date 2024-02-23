@@ -1,6 +1,6 @@
 package CustomReg;
 
-typedef 640 MAX_CUSTOM_REG_SIZE;
-Bit#(10) max_custom_reg_size = 640;
+typedef 64 MAX_CUSTOM_REG_SIZE;
+Bit#(7) max_custom_reg_size = 64;
 
 endpackage

@@ -38,10 +38,9 @@
     <reg name="t6" bitsize="32" type="int" group="general"/>
     <reg name= "pc" bitsize="32" type="code_ptr" group="general"/>
 
-    <!-- Sed replace given_def.xml here. -->
+<!-- Replace with types here. -->
 
-    <!-- parsing start -->
-    <!-- Sed replace custom_regs.xml here. -->
-    <!-- parsing end -->
+<!-- Replace with custom regs here. -->
+
   </feature>
 </target>

@@ -84,7 +84,7 @@ module mkDebug_Module(Debug_Module_IFC);
 	Reg#(Bit#(13)) rg_command_access_reg_regno <- mkRegU;
 	Reg#(DM_Word)  rg_data0										 <- mkRegU;
 	Reg#(Bit#(MAX_CUSTOM_REG_SIZE)) rg_custom_reg_data <- mkRegU;
-	Reg#(Bit#(10)) rg_custom_reg_idx <- mkRegU;
+	Reg#(Bit#(7)) rg_custom_reg_idx <- mkRegU;
 
 	// Memory Status
 	Reg#(DM_Word)	sbaddress                   <- mkReg(0);
@@ -124,7 +124,7 @@ module mkDebug_Module(Debug_Module_IFC);
 	Bool is_csr = ((fromInteger(dm_command_access_reg_regno_csr_0) <= rg_command_access_reg_regno)
 		  && (rg_command_access_reg_regno <= fromInteger(dm_command_access_reg_regno_csr_FFF)));
 	Bool is_custom_reg = ((fromInteger(dm_command_access_reg_regno_custom_0) <= rg_command_access_reg_regno)
-		  && (rg_command_access_reg_regno <= fromInteger(dm_command_access_reg_regno_custom_10)));
+		  && (rg_command_access_reg_regno <= fromInteger(dm_command_access_reg_regno_custom_100)));
 	
 
 	// ================================================================
