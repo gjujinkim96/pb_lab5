@@ -1,4 +1,9 @@
 #!/bin/bash
 
-cd /build/CA_Summer_Project/pb_lab5/src/gdb
-riscv64-unknown-elf-gdb -x start.gdb
+./start_stub.sh > /dev/null 2>&1 &
+STUB_PID=$!
+
+./start_gdb.sh
+
+pkill -P $STUB_PID
+pkill -P $$
